@@ -34,7 +34,7 @@ distance=(x1,y1,x2,y2)->
 class Ball
 	@D=40
 	@SIZE=16
-	@COLRADIUS=12
+	@COLRADIUS=8
 	@LERP=8
 
 	get_pos:(x,y)=>return CENTERX+x*@@D,CENTERY+y*@@D
@@ -83,7 +83,7 @@ class Ball
 
 class Hand
 	@SIZE=16
-	@COLRADIUS=12
+	@COLRADIUS=8
 	@COUNT=math.pi
 
 	-- theta in radians
@@ -111,6 +111,27 @@ class Hand
 
 	onball:(ball)=>return distance(@x,@y,ball.x,ball.y)<@@COLRADIUS+ball.__class.COLRADIUS
 
+HANDS1={
+	-- NE
+	{x:WIDTH-10,y:40,th:math.pi/2,w:80,h:0},
+	-- E
+	{x:WIDTH,y:HEIGHT/2,th:math.pi/2,w:75,h:0},
+}
+HANDS2={
+	-- N,NE
+	{x:WIDTH-20,y:30,th:math.pi/2,w:100,h:0},
+	-- NE,E
+	{x:WIDTH,y:40,th:math.pi/2,w:85,h:50},
+	-- C,E
+	{x:WIDTH-20,y:HEIGHT/2,th:math.pi/2,w:100,h:0},
+}
+HANDS3={
+	-- N,NE,E
+	{x:WIDTH,y:0,th:math.pi/2,w:120,h:HEIGHT/2},
+	-- NE,E,SE
+	{x:WIDTH,y:HEIGHT/2,th:math.pi/2,w:85,h:HEIGHT/2},
+}
+
 class HandGen
 	new:=>
 		@hands={}
@@ -124,18 +145,74 @@ class HandGen
 
 	update:(tt)=>
 		if @nextpat<=0
-			-- gen new hands
-			@nextpat=300-tt*200/MUSLEN
-			speed=200-tt*100/MUSLEN
-			if tt<100
-				1-- nothing
-			else --if tt<500
-				-- single swipes
-				table.insert(@hands, Hand(WIDTH-30,30,math.pi/2,100,0,math.pi/speed))
+			if tt>100
+				switch tt//500
+					when 0
+						-- single swipes
+						@genhands(HANDS1[math.random(#HANDS1)])
+					when 1
+						-- two singles
+						@gen2hands(HANDS1)
+					when 2
+						-- double
+						@genhands(HANDS2[math.random(#HANDS2)])
+					when 3
+						-- double+single
+						@genhands(HANDS2[math.random(#HANDS2)])
+						@genhands(HANDS1[math.random(#HANDS1)])
+					when 4
+						-- triple
+						@genhands(HANDS3[math.random(#HANDS3)])
+					when 5
+						-- triple+double
+						@genhands(HANDS3[math.random(#HANDS3)])
+						@genhands(HANDS2[math.random(#HANDS2)])
+					when 6
+						-- triple+double
+						@genhands(HANDS3[math.random(#HANDS3)])
+						@genhands(HANDS2[math.random(#HANDS2)])
+					when 7
+						-- double+2single
+						@genhands(HANDS2[math.random(#HANDS2)])
+						@gen2hands(HANDS1)
+					when 8
+						-- double+2single
+						@genhands(HANDS2[math.random(#HANDS2)])
+						@gen2hands(HANDS1)
+					else
+						-- triple+double+single
+						@genhands(HANDS3[math.random(#HANDS3)])
+						@genhands(HANDS2[math.random(#HANDS2)])
+						@genhands(HANDS1[math.random(#HANDS1)])
 		else
 			@nextpat-=1
 		for hand in *@hands
 			hand\update!
+
+	gen2hands:(swipes)=>
+		swipe1=swipes[math.random(#swipes)]
+		swipe2=nil
+		while true
+			swipe2=swipes[math.random(#swipes)]
+			if swipe1!=swipe2
+				break
+		@genhands(swipe1)
+		@genhands(swipe2)
+
+	genhands:(swipe)=>
+		-- gen new hands
+		@nextpat=100-tt*30/MUSLEN
+		speed=150-tt*30/MUSLEN
+		-- randomly flip: x,y
+		x,w=if math.random(2)==1
+			swipe.x,swipe.w
+		else
+			WIDTH-swipe.x,-swipe.w
+		y,h=if math.random(2)==1
+			swipe.y,swipe.h
+		else
+			HEIGHT-swipe.y,-swipe.h
+		table.insert(@hands, Hand(x,y,swipe.th,w,h,math.pi/speed))
 
 	postupdate:(ball)=>
 		@hands=[hand for hand in *@hands when not hand\isout! and not hand\onball(ball)]
@@ -177,7 +254,7 @@ export TIC=->
 
 	ball\draw!
 	handgen\draw!
-	print(string.format("HELLO WORLD! %d",tt),84,84)
+	print("HELLO WORLD! #{tt}",84,84)
 	tt+=1
 	if tt==MUSLEN
 		music!
@@ -217,11 +294,10 @@ export TIC=->
 -- </WAVES>
 
 -- <SFX>
--- 000:020010001000200030004000600050005000500050006000600070007000700080008001800190009000900090009000900f900f90009000900090003020000000fd
--- 001:0f071f043f004f009f00bf00cf00ef00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00102000000000
--- 002:0e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e00204000000000
--- 003:000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005000000000
--- 010:0f000f002f004f006f007f009f00bf00cf002f003f007f009f00bf00cf00df006f009f00bf00cf00df00bf00cf00df00ef00ff00ef00ff00ff00ff00000000000000
+-- 000:52006000800080009000a000a000b000b000c000b000b000b000b000b000b000b000b001b001b000b000b000b000c000c00fc00fc000c000c000c0003000000000fd
+-- 001:6f077f049f00bf00df00ef00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00100000000000
+-- 002:0e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e00200000000000
+-- 010:0f008f00af00bf00cf00df00ef00ef004f00af00bf00cf00df00ef00ef00ef006f00cf00df00ef00ef009f00df00ef00ef00ef00cf00ef00ef00ff00050000000000
 -- </SFX>
 
 -- <PATTERNS>
