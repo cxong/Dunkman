@@ -1,24 +1,27 @@
--- title:  game title
--- author: game developer
--- desc:   short description
--- script: lua
+-- title:  Dunkman
+-- author: congusbongus
+-- desc:   Get past the defenders for a slam dunk
+-- script: moon
 
 t=0
 x=96
 y=24
 
-function TIC()
+export TIC=->
 
-	if btn(0) then y=y-1 end
-	if btn(1) then y=y+1 end
-	if btn(2) then x=x-1 end
-	if btn(3) then x=x+1 end
+	if btn(0)
+		y=y-1
+	if btn(1)
+		y=y+1
+	if btn(2)
+		x=x-1
+	if btn(3)
+		x=x+1
 
 	cls(13)
 	spr(1+t%60//30*2,x,y,14,3,0,0,2,2)
 	print("HELLO WORLD!",84,84)
 	t=t+1
-end
 
 -- <TILES>
 -- 001:efffffffff222222f8888888f8222222f8fffffff8ff0ffff8ff0ffff8ff0fff
