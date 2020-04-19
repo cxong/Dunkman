@@ -115,6 +115,10 @@ arm=(x1,y1,x2,y2)->
 	thickline(ex,ey,x2,y2,whalf-1,ARMFILLC)
 	circ(x2,y2,7,ARMFILLC)
 
+drawkeys=(tt)->
+	s=if tt%60<30 then 320 else 324
+	spr(s,WIDTH-40,HEIGHT-40,1,1,0,0,4,4)
+
 class Ball
 	@D=40
 	@SIZE=16
@@ -399,17 +403,41 @@ class State
 	draw:=>return
 
 class SkipState extends State
+	new:(grace)=>
+		super!
+		@grace=grace
+
 	next:=>
-		if @tt>60 and (btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5))
+		if @tt>@grace and (btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5))
 			@finish!
 			@nextstate\reset!
 			return @nextstate
 		return self
 
+	draw:=>
+		if @tt>@grace
+			drawkeys(@tt)
+
 class TitleState extends SkipState
+	new:=>
+		super(60)
+
 	draw:=>
 		cls(0)
 		drawimage(title_values,title_runs,WIDTH,HEIGHT,0,0,0)
+		super!
+
+class TextState extends SkipState
+	new:(text,color)=>
+		super(10)
+		@text=text
+		@color=color
+
+	draw:=>
+		cls(0)
+		text=string.sub(@text,1,@tt//3)
+		print(text,12,HEIGHT-40,@color)
+		super!
 
 class TimedState extends State
 	new:(len)=>
@@ -483,10 +511,22 @@ class GameState extends TimedState
 		print("LIVES: #{@lives}",12,HEIGHT-12,12)
 
 titlestate=TitleState!
+intro1=TextState("One point down, 30 seconds to go...",13)
+intro2=TextState("\"Only one thing to do... a SLAM DUNK!\"",11)
+intro3=TextState("\"Don't do it Suzuki!\nTheir defense is too strong!\"",12)
+intro4=TextState("\"I'm free, pass it to me and-\"",12)
+intro5=TextState("\"SHUT UP! I'm going for it, because...\"",11)
+intro6=TextState("\"I AM THE DUNKMAN!!!\"",11)
 gamestate=GameState!
 hoopstate=HoopState!
 slamstate=SlamState!
-titlestate.nextstate=gamestate
+titlestate.nextstate=intro1
+intro1.nextstate=intro2
+intro2.nextstate=intro3
+intro3.nextstate=intro4
+intro4.nextstate=intro5
+intro5.nextstate=intro6
+intro6.nextstate=gamestate
 gamestate.nextstate=hoopstate
 gamestate.losestate=titlestate
 hoopstate.nextstate=slamstate
@@ -513,6 +553,38 @@ export TIC=->
 -- 035:2223000022230000222300002230000022300000230000002300000030000000
 -- 049:3222222203322222000332220000033300000000000000000000000000000000
 -- 050:2322223323222330322330003330000000000000000000000000000000000000
+-- 064:1111111111111111111111111111111111111111111111111111111111111111
+-- 065:11111111111111111111111111111111111eeeee11eecccc11eeccc011eecc00
+-- 066:11111111111111111111111111111111eeeee111ccccee110cccee1100ccee11
+-- 067:1111111111111111111111111111111111111111111111111111111111111111
+-- 068:1111111111111111111111111111111111111111111111111111111111111111
+-- 069:1111111111111111111111111111111111111111111eeeee11eecccc11eeccc0
+-- 070:1111111111111111111111111111111111111111eeeee111ccccee110cccee11
+-- 071:1111111111111111111111111111111111111111111111111111111111111111
+-- 080:1111111111111111111111111111111111111111111111111eeeeeeeeecccccc
+-- 081:11eeccc011eeccc011eecccc11eeeeee11eedddd11edddddee0eeeeeceeecccc
+-- 082:0cccee110cccee11ccccee11eeeeee11ddddee11ddddde11eeeee0eecccceeec
+-- 083:111111111111111111111111111111111111111111111111eeeeeee1ccccccee
+-- 084:111111111111111111111111111111111111111111111111111111111eeeeeee
+-- 085:11eecc0011eeccc011eeccc011eecccc11eeeeee11eedddd111eeeeeee1eeeee
+-- 086:00ccee110cccee110cccee11ccccee11eeeeee11ddddee11eeeee111eeeee1ee
+-- 087:11111111111111111111111111111111111111111111111111111111eeeeeee1
+-- 096:eecc0ccceec00000eec00000eecc0ccceecccccceeeeeeeeeeddddddeddddddd
+-- 097:ceeeccc0ceeeccc0ceeecc00ceeeccc0ceeecccceeeeeeeedeeeddddddeddddd
+-- 098:0ccceeec0ccceeec00cceeec0ccceeeccccceeeceeeeeeeeddddeeeddddddedd
+-- 099:ccc0ccee00000cee00000ceeccc0cceecccccceeeeeeeeeeddddddeeddddddde
+-- 100:eecccccceecc0ccceec00000eec00000eecc0ccceecccccceeeeeeeeeedddddd
+-- 101:ceeeccccceeeccc0ceeeccc0ceeecc00ceeeccc0ceeecccceeeeeeeedeeedddd
+-- 102:cccceeec0ccceeec0ccceeec00cceeec0ccceeeccccceeeceeeeeeeeddddeeed
+-- 103:cccccceeccc0ccee00000cee00000ceeccc0cceecccccceeeeeeeeeeddddddee
+-- 112:1eeeeeee11111111111111111111111111111111111111111111111111111111
+-- 113:ee1eeeee11111111111111111111111111111111111111111111111111111111
+-- 114:eeeee1ee11111111111111111111111111111111111111111111111111111111
+-- 115:eeeeeee111111111111111111111111111111111111111111111111111111111
+-- 116:1eeeeeee11111111111111111111111111111111111111111111111111111111
+-- 117:ee1eeeee11111111111111111111111111111111111111111111111111111111
+-- 118:eeeee1ee11111111111111111111111111111111111111111111111111111111
+-- 119:eeeeeee111111111111111111111111111111111111111111111111111111111
 -- </SPRITES>
 
 -- <WAVES>
