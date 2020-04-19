@@ -625,6 +625,7 @@ class GameState extends TimedState
 		@lines=Speedlines!
 		@lives=3
 		@lostcounter=60
+		@hitcounter=0
 
 	update:=>
 		super!
@@ -637,10 +638,13 @@ class GameState extends TimedState
 			if handonball
 				@ball\hit!
 				@lives-=1
+				@hitcounter=60
 				if @lives==0
 					music!
 			@handgen\postupdate(@ball)
 			@lines\update!
+			if @hitcounter>0
+				@hitcounter-=1
 
 	finish:=>
 		music!
@@ -659,7 +663,8 @@ class GameState extends TimedState
 		@ball\draw!
 		@handgen\draw!
 		print("DUNKING: #{@tt*1000//MUSLEN/10}%",84,12,12)
-		print("LIVES: #{@lives}",12,HEIGHT-12,12)
+		livesc=if @hitcounter>0 and @tt%8>4 then 0 else 12
+		print("LIVES: #{@lives}",12,HEIGHT-12,livesc)
 
 titlestate=TitleState!
 intro1=TextState("One point down, 30 seconds to go...",13)
