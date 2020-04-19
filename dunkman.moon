@@ -79,6 +79,7 @@ class Ball
 	@HANDSIZE=8
 	@COLRADIUS=8
 	@LERP=8
+	@HITC=60
 
 	get_pos:(x,y)=>return CENTERX+x*@@D,CENTERY+y*@@D
 
@@ -90,6 +91,7 @@ class Ball
 		@angle=0
 		@lax,@lay=@sx,@sy
 		@rax,@ray=@sx,@sy
+		@hitc=0
 
 	get_target:=>
 		tx=0
@@ -112,6 +114,9 @@ class Ball
 			ty/=d
 		return @get_pos(tx,ty)
 
+	canhit:=>
+		return @hitc==0
+
 	update:=>
 		xnew,ynew=@get_target!
 		if @ex!=xnew or @ey!=ynew
@@ -126,6 +131,8 @@ class Ball
 			t=outquad(@lerpcnt/@@LERP)
 			@x=lerp(@sx,@ex,t)
 			@y=lerp(@sy,@ey,t)
+		if @hitc>0
+			@hitc-=1
 
 	draw:=>
 		-- hands and arms
@@ -142,7 +149,12 @@ class Ball
 		@rax,@ray=(@rax+rx)/2,(@ray+ry)/2
 		arm(138,77,@rax,@ray)
 		-- ball
-		spr(256,@x-@@SIZE,@y-@@SIZE,0,1,0,@angle,4,4)
+		if @hitc//3%3<2
+			spr(256,@x-@@SIZE,@y-@@SIZE,0,1,0,@angle,4,4)
+
+	hit:=>
+		@hitc=@@HITC
+		sfx(SFXHIT)
 
 class Hand
 	@SIZE=16
@@ -173,7 +185,7 @@ class Hand
 	draw:=>
 		spr(320,@x-@@SIZE,@y-@@SIZE,14,1,@flip,0,4,4)
 
-	onball:(ball)=>return distance(@x,@y,ball.x,ball.y)<@@COLRADIUS+ball.__class.COLRADIUS
+	onball:(ball)=>return distance(@x,@y,ball.x,ball.y)<@@COLRADIUS+ball.__class.COLRADIUS and ball\canhit!
 
 HANDS1={
 	-- NE
@@ -358,19 +370,21 @@ class State
 	new:=>
 		@nextstate=self
 
-	reset:=>return
+	reset:=>
+		@tt=0
+
+	update:=>
+		@tt+=1
 
 	finish:=>return
 
 	next:=>return self
 
-	update:=>return
-
 	draw:=>return
 
 class SkipState extends State
 	next:=>
-		if btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5)
+		if @tt>60 and (btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5))
 			@finish!
 			@nextstate\reset!
 			return @nextstate
@@ -386,12 +400,6 @@ class TimedState extends State
 		super!
 		@tt=0
 		@len=len
-
-	reset:=>
-		@tt=0
-
-	update:=>
-		@tt+=1
 
 	next:=>
 		if @tt>=@len
@@ -421,10 +429,12 @@ class GameState extends TimedState
 		super MUSLEN
 
 	reset:=>
+		super!
 		music(MUSGAME,-1,-1,true)
 		@ball=Ball!
 		@handgen=HandGen!
 		@lines=Speedlines!
+		@lives=3
 
 	update:=>
 		super!
@@ -432,12 +442,20 @@ class GameState extends TimedState
 		@handgen\update(@tt)
 		handonball=@handgen\gethandonball(@ball)
 		if handonball
-			sfx(SFXHIT)
+			@ball\hit!
+			@lives-=1
 		@handgen\postupdate(@ball)
 		@lines\update!
 
 	finish:=>
 		music!
+
+	next:=>
+		if @lives==0
+			@finish!
+			@losestate\reset!
+			return @losestate
+		return super!
 
 	draw:=>
 		-- draw speed lines
@@ -446,6 +464,7 @@ class GameState extends TimedState
 		@ball\draw!
 		@handgen\draw!
 		print("DUNKING: #{@tt*1000//MUSLEN/10}%",84,12,12)
+		print("LIVES: #{@lives}",12,HEIGHT-12,12)
 
 titlestate=TitleState!
 gamestate=GameState!
@@ -453,6 +472,7 @@ hoopstate=HoopState!
 slamstate=SlamState!
 titlestate.nextstate=gamestate
 gamestate.nextstate=hoopstate
+gamestate.losestate=titlestate
 hoopstate.nextstate=slamstate
 slamstate.nextstate=titlestate
 state=titlestate
@@ -506,7 +526,7 @@ export TIC=->
 -- 000:720080009000a000a000b000b000c000c000c000c000c000c000c000c000c000c000c001c001c000c000c000c000c000c00fc00fc000c000c000c0003000000000fd
 -- 001:6f079f04af00bf00cf00ef00ef00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00ff00100000000000
 -- 002:0e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e000e00200000000000
--- 010:0f008f00af00bf00cf00df00ef00ef004f00af00bf00cf00df00ef00ef00ef006f00cf00df00ef00ef009f00df00ef00ef00ef00cf00ef00ef00ff00050000000000
+-- 010:0f008f00af00bf00cf00df00ef00ef004f00af00bf00cf00df00ef00ef00ef006f00cf00df00ef00ef009f00df00ef00ef00ef00cf00ef00ef00ff00200000000000
 -- </SFX>
 
 -- <PATTERNS>
