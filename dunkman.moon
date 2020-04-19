@@ -135,7 +135,7 @@ class Hand
 	@COUNT=math.pi
 
 	-- theta in radians
-	new:(cx,cy,theta,w,h,speed)=>
+	new:(cx,cy,theta,w,h,speed,flip)=>
 		@cx=cx
 		@cy=cy
 		@theta=theta
@@ -143,6 +143,7 @@ class Hand
 		@w=w
 		@h=h
 		@speed=speed
+		@flip=flip
 		@x=0
 		@y=0
 
@@ -155,7 +156,7 @@ class Hand
 	isout:=>return @counter>@@COUNT
 
 	draw:=>
-		spr(320,@x-@@SIZE,@y-@@SIZE,0,1,0,0,4,4)
+		spr(320,@x-@@SIZE,@y-@@SIZE,0,1,@flip,0,4,4)
 
 	onball:(ball)=>return distance(@x,@y,ball.x,ball.y)<@@COLRADIUS+ball.__class.COLRADIUS
 
@@ -260,7 +261,10 @@ class HandGen
 			swipe.y,swipe.h
 		else
 			HEIGHT-swipe.y,-swipe.h
-		table.insert(@hands, Hand(x,y,swipe.th,w,h,math.pi/speed))
+		flip=0
+		if w<0 then flip+=1
+		if h>0 then flip+=2
+		table.insert(@hands, Hand(x,y,swipe.th,w,h,math.pi/speed,flip))
 
 	postupdate:(ball)=>
 		@hands=[hand for hand in *@hands when not hand\isout! and not hand\onball(ball)]
@@ -282,6 +286,18 @@ ball=Ball!
 handgen=HandGen!
 music(MUSGAME,-1,-1,true)
 
+drawimage=(values,runs,w,h,xs,ys)->
+	-- TODO: draw at arbitrary position
+	val_i=0
+	run=0
+	for y=0,136-1
+		for x=0,240-1
+			if run==0
+				val_i=val_i+1
+				run=runs[val_i]
+			run=run-1
+			pix(x,y,values[val_i])
+
 export TIC=->
 
 	ball\update!
@@ -293,17 +309,7 @@ export TIC=->
 
 	cls(0)
 
-	-- draw image
-	val_i=0
-	run=0
-	for y=0,136-1
-		for x=0,240-1
-			if run==0
-				val_i=val_i+1
-				run=img_runs[val_i]
-			run=run-1
-			pix(x,y,img_values[val_i])
-
+	drawimage(img_values,img_runs,WIDTH,HEIGHT,0,0)
 	ball\draw!
 	handgen\draw!
 	print("DUNKING: #{tt*1000//MUSLEN/10}%",84,12,12)
