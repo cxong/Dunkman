@@ -43,23 +43,35 @@ thickline=(x1,y1,x2,y2,whalf,c)->
 	tri(xa,ya,xb,yb,xc,yc,c)
 	tri(xc,yc,xd,yd,xa,ya,c)
 
+ARMLEN=40
+ARMOUTC=0
+ARMFILLC=7
 arm=(x1,y1,x2,y2)->
-	whalf=4
-	dx,dy=x1-x2,y1-y2
+	whalf=5
 	d=distance(x1,y1,x2,y2)
+	-- add elbows
+	ed=(ARMLEN-d)/2
+	dx,dy=x1-x2,y1-y2
 	dxn,dyn=dx/d,dy/d
 	pxn,pyn=dyn,-dxn
-	px,py=pxn*whalf,pyn*whalf
-	xa,ya=x1+px,y1+py
-	xb,yb=x2+px,y2+py
-	xc,yc=x2-px,y2-py
-	xd,yd=x1-px,y1-py
+	-- bend elbows perpendicular to arm, outwards
+	if (x1>x2) != (y1<y2)
+		pxn,pyn=-pxn,-pyn
+	-- exception if arms too close - always bend downwards
+	if d<20
+		pxn,pyn=0,1
+	ex=(x1+x2)/2+pxn*ed
+	ey=(y1+y2)/2+pyn*ed
 	-- arm and hand outlines
-	thickline(x1,y1,x2,y2,5,0)
-	circb(x2,y2,8,0)
+	thickline(x1,y1,ex,ey,whalf,ARMOUTC)
+	circb(ex,ey,whalf,ARMOUTC)
+	thickline(ex,ey,x2,y2,whalf,ARMOUTC)
+	circb(x2,y2,8,ARMOUTC)
 	-- arm and hand fills
-	thickline(x1,y1,x2,y2,4,7)
-	circ(x2,y2,7,7)
+	thickline(x1,y1,ex,ey,whalf-1,ARMFILLC)
+	circ(ex,ey,whalf-1,ARMFILLC)
+	thickline(ex,ey,x2,y2,whalf-1,ARMFILLC)
+	circ(x2,y2,7,ARMFILLC)
 
 class Ball
 	@D=40
@@ -76,6 +88,8 @@ class Ball
 		@x,@y=@sx,@sy
 		@lerpcnt=0
 		@angle=0
+		@lax,@lay=@sx,@sy
+		@rax,@ray=@sx,@sy
 
 	get_target:=>
 		tx=0
@@ -119,12 +133,14 @@ class Ball
 		lx,ly=100,98
 		if @x<CENTERX+20
 			lx,ly=@x-8,@y
-		arm(106,70,lx,ly)
+		@lax,@lay=(@lax+lx)/2,(@lay+ly)/2
+		arm(106,70,@lax,@lay)
 		-- right
 		rx,ry=150,80
 		if @x>CENTERX-20
 			rx,ry=@x+8,@y
-		arm(138,77,rx,ry)
+		@rax,@ray=(@rax+rx)/2,(@ray+ry)/2
+		arm(138,77,@rax,@ray)
 		-- ball
 		spr(256,@x-@@SIZE,@y-@@SIZE,0,1,0,@angle,4,4)
 
@@ -373,6 +389,7 @@ gamestate.nextstate=hoopstate
 hoopstate.nextstate=slamstate
 slamstate.nextstate=gamestate
 state=gamestate
+gamestate\reset!
 
 export TIC=->
 
