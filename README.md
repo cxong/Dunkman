@@ -5,4 +5,4 @@
 
 ![](https://raw.githubusercontent.com/cxong/Dunkman/master/cover.gif)
 
-Compo game for Ludum Dare 46: https://ldjam.com/events/ludum-dare/46/$197610
+Compo game for Ludum Dare 46: https://ldjam.com/events/ludum-dare/46/dunkman
