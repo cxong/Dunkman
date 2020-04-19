@@ -440,22 +440,24 @@ class Focusline
 		tri(@sx1,@sy1,@sx2,@sy2,@x2,@y2,@c)
 
 class Focuslines
-	new:(x,y)=>
+	new:(x,y,bgc,c)=>
 		@x=x
 		@y=y
+		@bgc=bgc
+		@c=c
 		@lines={}
 
 	update:=>
 		for i=1,10
 			dx,dy=math.random!-0.5,math.random!-0.5
 			dx,dy=norm(dx,dy)
-			table.insert(@lines,Focusline(@x,@y,dx,dy,12,10))
+			table.insert(@lines,Focusline(@x,@y,dx,dy,@c,10))
 		for l in *@lines
 			l\update(math.random(40,60))
 		@lines=[l for l in *@lines when l\alive!]
 
 	draw:=>
-		cls(0)
+		cls(@bgc)
 		for l in *@lines
 			l\draw!
 
@@ -501,7 +503,7 @@ class TitleState extends SkipState
 	reset:=>
 		super!
 		music(MUSTITLE,-1,-1,true)
-		@lines=Focuslines(WIDTH/2,HEIGHT/2)
+		@lines=Focuslines(WIDTH/2,HEIGHT/2,0,14)
 
 	update:=>
 		super!
@@ -510,6 +512,39 @@ class TitleState extends SkipState
 	draw:=>
 		@lines\draw!
 		drawimage(title_values,title_runs,WIDTH,HEIGHT,0,0,0)
+		super!
+
+class DunkmanState extends SkipState
+	new:=>
+		super(10)
+
+	reset:=>
+		super!
+		music!
+		@lines=Focuslines(WIDTH/2,HEIGHT/2,15,3)
+
+	update:=>
+		super!
+		@lines\update!
+
+	draw:=>
+		@lines\draw!
+		drawimage(bg_values,bg_runs,WIDTH,HEIGHT,math.random(-1,1)-8,math.random(-1,1)+14,0)
+		rect(0,0,WIDTH,HEIGHT/2-20,0)
+		rect(0,HEIGHT/2+20,WIDTH,HEIGHT/2-20,0)
+		text=string.sub("\"I AM THE DUNKMAN!!!\"",1,@tt//3)
+		print(text,12,HEIGHT-40,11)
+		super!
+
+class LoseState extends SkipState
+	new:=>
+		super(60)
+
+	draw:=>
+		cls(0)
+		drawimage(lose_values,lose_runs,WIDTH,HEIGHT,0,0,0)
+		text=string.sub("Your team lost the game\nIf only you passed the ball...",1,@tt//3)
+		print(text,12,HEIGHT-40,13)
 		super!
 
 class TextState extends SkipState
@@ -522,17 +557,6 @@ class TextState extends SkipState
 		cls(0)
 		text=string.sub(@text,1,@tt//3)
 		print(text,12,HEIGHT-40,@color)
-		super!
-
-class LoseState extends SkipState
-	new:=>
-		super(60)
-
-	draw:=>
-		cls(0)
-		drawimage(lose_values,lose_runs,WIDTH,HEIGHT,0,0,0)
-		text=string.sub("Your team lost the game\nIf only you passed the ball...",1,@tt//3)
-		print(text,12,HEIGHT-40,13)
 		super!
 
 class TimedState extends State
@@ -551,7 +575,7 @@ class TimedState extends State
 class SlamState extends SkipState
 	new:=>
 		super(180)
-		@lines=Focuslines(110,110)
+		@lines=Focuslines(110,110,0,12)
 
 	reset:=>
 		super!
@@ -569,7 +593,7 @@ class SlamState extends SkipState
 class HoopState extends TimedState
 	new:=>
 		super 250
-		@lines=Focuslines(170,42)
+		@lines=Focuslines(170,42,0,12)
 
 	reset:=>
 		super!
@@ -638,7 +662,7 @@ intro2=TextState("\"Only one thing to do... a SLAM DUNK!\"",11)
 intro3=TextState("\"Don't do it Suzuki!\nTheir defense is too strong!\"",12)
 intro4=TextState("\"I'm free, pass it to me and-\"",12)
 intro5=TextState("\"SHUT UP! I'm going for it, because...\"",11)
-intro6=TextState("\"I AM THE DUNKMAN!!!\"",11)
+intro6=DunkmanState!
 gamestate=GameState!
 hoopstate=HoopState!
 slamstate=SlamState!
