@@ -1,7 +1,7 @@
 # Dunkman
 🏀A minigame of slam dunk for TIC-80
 
-## [Play Online](https://tic.computer/play?cart=1179)
+## [Play Online](https://tic80.com/play?cart=1179)
 
 ![](https://raw.githubusercontent.com/cxong/Dunkman/master/cover.gif)
 
