@@ -2,7 +2,7 @@
 -- author:	congusbongus
 -- desc:	Get past the defenders for a slam dunk
 -- script:	moon
--- license:	MIT
+-- license:	MIT License
 -- site:	https://github.com/cxong/Dunkman
 
 WIDTH=240
