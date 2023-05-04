@@ -1,7 +1,9 @@
--- title:  Dunkman
--- author: congusbongus
--- desc:   Get past the defenders for a slam dunk
--- script: moon
+-- title:	Dunkman
+-- author:	congusbongus
+-- desc:	Get past the defenders for a slam dunk
+-- script:	moon
+-- license:	MIT
+-- site:	https://github.com/cxong/Dunkman
 
 WIDTH=240
 CENTERX=WIDTH/2
